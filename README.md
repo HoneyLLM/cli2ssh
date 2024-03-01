@@ -12,7 +12,7 @@ go install github.com/PeronGH/cli2ssh/cmd/cli2ssh@latest
 
 ```bash
 # Check usage
-cli2ssh -h
+cli2ssh --help
 
 # Example: echo the username
 cli2ssh -c 'echo Hello, {{ .User }}.'
