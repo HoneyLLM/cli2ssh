@@ -11,8 +11,7 @@ func getEnvWithDefault(key, def string) string {
 }
 
 var (
-	Host         = getEnvWithDefault("HOST", "localhost")
-	Port         = getEnvWithDefault("PORT", "2222")
-	HostKeyPath  = getEnvWithDefault("HOST_KEY_PATH", "")
-	AllowedUsers = getEnvWithDefault("ALLOWED_USERS", "")
+	Host        = getEnvWithDefault("CLI2SSH_HOST", "localhost")
+	Port        = getEnvWithDefault("CLI2SSH_HOST", "2222")
+	HostKeyPath = getEnvWithDefault("CLI2SSH_HOST_KEY_PATH", "")
 )
