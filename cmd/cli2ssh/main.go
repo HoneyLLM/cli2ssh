@@ -1,20 +1,40 @@
 package main
 
 import (
+	"flag"
 	"os"
 	"os/exec"
 
+	"github.com/PeronGH/cli2ssh/internal/args"
 	"github.com/PeronGH/cli2ssh/internal/server"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 )
 
 func main() {
-	command := os.Args[1:]
+	var env args.ArrayArg
+	flag.Var(&env, "e", "Set environment variables for the command.")
+	command := flag.String("c", "", "Command to run for each SSH session.")
+	useOsEnv := flag.Bool("os-env", false, "Use the OS environment for the command.")
+
+	flag.Parse()
+
+	if *command == "" {
+		log.Fatal("No command provided.")
+	}
 
 	srv, err := server.CreateServer(server.CreateServerOptions{
 		CommandProvider: func(s ssh.Session) *exec.Cmd {
-			return exec.CommandContext(s.Context(), command[0], command[1:]...)
+			argSession := args.NewSession(s)
+			fmtCmd := argSession.FormatArg(*command)
+			fmtEnv := argSession.FormatArgs(env)
+
+			cmd := exec.CommandContext(s.Context(), "sh", "-c", fmtCmd)
+			if *useOsEnv {
+				cmd.Env = os.Environ()
+			}
+			cmd.Env = append(cmd.Env, fmtEnv...)
+			return cmd
 		},
 	})
 
