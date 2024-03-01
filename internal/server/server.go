@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"os"
 	"os/exec"
 	"strings"
 	"syscall"
@@ -24,13 +23,14 @@ var (
 
 type CreateServerOptions struct {
 	// Required
-	CommandProvider func(s ssh.Session) []string
+
+	// Always use `exec.CommandContext` to create the command.
+	CommandProvider func(s ssh.Session) *exec.Cmd
 
 	// Optional
 	Host         string
 	Port         string
 	HostKeyPath  string
-	EnvProvider  func(s ssh.Session) []string
 	AuthProvider func(s ssh.Session) bool
 }
 
@@ -56,11 +56,6 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 				return nil, fmt.Errorf("could not get default host key path: %w", err)
 			}
 			opts.HostKeyPath = hostKeyPath
-		}
-	}
-	if opts.EnvProvider == nil {
-		opts.EnvProvider = func(s ssh.Session) []string {
-			return os.Environ()
 		}
 	}
 	if opts.AuthProvider == nil {
@@ -96,15 +91,14 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 						return
 					}
 
-					command := opts.CommandProvider(s)
-					if len(command) == 0 {
+					cmd := opts.CommandProvider(s)
+					if cmd == nil {
 						wish.Fatalln(s, "your session has no command to execute.")
 						next(s)
 						return
 					}
 
-					cmd := exec.CommandContext(s.Context(), command[0], command[1:]...)
-					cmd.Env = append(opts.EnvProvider(s), fmt.Sprintf("TERM=%s", pty.Term))
+					cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", pty.Term))
 					cmd.Stdin = pty.Slave
 					cmd.Stdout = pty.Slave
 					cmd.Stderr = pty.Slave
