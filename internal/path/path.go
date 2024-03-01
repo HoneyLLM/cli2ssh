@@ -5,17 +5,17 @@ import (
 	"path"
 )
 
-func GetDefaultHostKeyPath() (string, error) {
+func GetDefaultHostKeyPath() string {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		return "", err
+		return ""
 	}
 
 	dataDirPath := path.Join(homeDir, ".cli2ssh")
 	err = os.MkdirAll(dataDirPath, 0700)
 	if err != nil {
-		return "", err
+		return ""
 	}
 
-	return path.Join(dataDirPath, "id_ed25519"), nil
+	return path.Join(dataDirPath, "id_ed25519")
 }

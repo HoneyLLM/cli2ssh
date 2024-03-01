@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"syscall"
 
-	"github.com/PeronGH/cli2ssh/internal/env"
 	"github.com/PeronGH/cli2ssh/internal/path"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -39,21 +38,13 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 
 	// Optional options
 	if opts.Host == "" {
-		opts.Host = env.Host
+		opts.Host = "localhost"
 	}
 	if opts.Port == "" {
-		opts.Port = env.Port
+		opts.Port = "2222"
 	}
 	if opts.HostKeyPath == "" {
-		if env.HostKeyPath != "" {
-			opts.HostKeyPath = env.HostKeyPath
-		} else {
-			hostKeyPath, err := path.GetDefaultHostKeyPath()
-			if err != nil {
-				return nil, fmt.Errorf("could not get default host key path: %w", err)
-			}
-			opts.HostKeyPath = hostKeyPath
-		}
+		opts.HostKeyPath = path.GetDefaultHostKeyPath()
 	}
 
 	return wish.NewServer(
