@@ -6,10 +6,12 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/PeronGH/cli2ssh/internal/env"
 	"github.com/PeronGH/cli2ssh/internal/path"
+	"github.com/PeronGH/cli2ssh/internal/set"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
@@ -25,10 +27,11 @@ type CreateServerOptions struct {
 	CommandProvider func(s ssh.Session) []string
 
 	// Optional
-	Host        string
-	Port        string
-	HostKeyPath string
-	EnvProvider func(s ssh.Session) []string
+	Host         string
+	Port         string
+	HostKeyPath  string
+	EnvProvider  func(s ssh.Session) []string
+	AuthProvider func(s ssh.Session) bool
 }
 
 func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
@@ -45,19 +48,31 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 		opts.Port = env.Port
 	}
 	if opts.HostKeyPath == "" {
-		if env.HostKeyPath == "" {
+		if env.HostKeyPath != "" {
+			opts.HostKeyPath = env.HostKeyPath
+		} else {
 			hostKeyPath, err := path.GetDefaultHostKeyPath()
 			if err != nil {
 				return nil, fmt.Errorf("could not get default host key path: %w", err)
 			}
 			opts.HostKeyPath = hostKeyPath
-		} else {
-			opts.HostKeyPath = env.HostKeyPath
 		}
 	}
 	if opts.EnvProvider == nil {
 		opts.EnvProvider = func(s ssh.Session) []string {
 			return os.Environ()
+		}
+	}
+	if opts.AuthProvider == nil {
+		if env.AllowedUsers == "" {
+			opts.AuthProvider = func(s ssh.Session) bool {
+				return true
+			}
+		} else {
+			allowedUsers := set.NewFromSlice(strings.Split(env.AllowedUsers, ","))
+			opts.AuthProvider = func(s ssh.Session) bool {
+				return allowedUsers.Has(s.User())
+			}
 		}
 	}
 
@@ -68,6 +83,12 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 		wish.WithMiddleware(
 			func(next ssh.Handler) ssh.Handler {
 				return func(s ssh.Session) {
+					if !opts.AuthProvider(s) {
+						wish.Fatalln(s, "you are not allowed to access the service.")
+						next(s)
+						return
+					}
+
 					pty, _, hasPty := s.Pty()
 					if !hasPty {
 						wish.Fatalln(s, "client has no PTY.")
@@ -93,7 +114,7 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 					}
 
 					if err := cmd.Run(); err != nil {
-						wish.Fatalln(s, "Could not start command", "error", err)
+						wish.Fatalln(s, "Failed to run the command:", err)
 					}
 
 					next(s)

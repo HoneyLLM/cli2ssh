@@ -11,7 +11,8 @@ func getEnvWithDefault(key, def string) string {
 }
 
 var (
-	Host        = getEnvWithDefault("HOST", "localhost")
-	Port        = getEnvWithDefault("PORT", "2222")
-	HostKeyPath = getEnvWithDefault("HOST_KEY_PATH", "")
+	Host         = getEnvWithDefault("HOST", "localhost")
+	Port         = getEnvWithDefault("PORT", "2222")
+	HostKeyPath  = getEnvWithDefault("HOST_KEY_PATH", "")
+	AllowedUsers = getEnvWithDefault("ALLOWED_USERS", "")
 )
