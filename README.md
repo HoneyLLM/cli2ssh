@@ -17,3 +17,9 @@ cli2ssh -h
 # Example: echo the username
 cli2ssh -c 'echo Hello, {{ .User }}.'
 ```
+
+## TODO
+
+- [ ] Authentication
+- [ ] Add tests
+- [ ] Integrate with GitHub Actions
