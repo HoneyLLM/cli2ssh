@@ -21,6 +21,14 @@ cli2ssh -c 'echo Hello, {{ .User }}.'
 cli2ssh -h 0.0.0.0 -e 'OTERM_DATA_DIR=userdata/{{ .User }}' -c $(which oterm)
 ```
 
+## Use Cases
+
+- Share a CLI program with someone who doesn't have it installed.
+- Publicly host a TUI program, allowing it to be accessed like a web page.
+- Let me know if you have any other ideas!
+
+```bash
+
 ## TODO
 
 - [ ] Authentication
