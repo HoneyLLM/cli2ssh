@@ -11,12 +11,13 @@ import (
 )
 
 type Session struct {
-	User      string
-	Host      string
-	Port      string
-	Command   string
-	Subsystem string
-	PublicKey string
+	User       string
+	Host       string
+	Port       string
+	Command    string
+	Subsystem  string
+	PublicKey  string
+	RemoteAddr string
 }
 
 func NewSession(s ssh.Session) *Session {
@@ -27,12 +28,13 @@ func NewSession(s ssh.Session) *Session {
 		publicKey = utils.StringifyPublicKey(pk)
 	}
 	return &Session{
-		User:      user,
-		Host:      host,
-		Port:      port,
-		Command:   s.RawCommand(),
-		Subsystem: s.Subsystem(),
-		PublicKey: publicKey,
+		User:       user,
+		Host:       host,
+		Port:       port,
+		Command:    s.RawCommand(),
+		Subsystem:  s.Subsystem(),
+		PublicKey:  publicKey,
+		RemoteAddr: s.RemoteAddr().String(),
 	}
 }
 
