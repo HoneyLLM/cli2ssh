@@ -80,6 +80,7 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 
 						if err := pipeStdio(cmd, s, s, s.Stderr()); err != nil {
 							log.Error("Failed to pipe stdio", "error", err)
+							wish.Fatalln(s, "Failed to pipe stdio:", err)
 							return
 						}
 					}
