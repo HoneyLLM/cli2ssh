@@ -10,15 +10,24 @@ import (
 )
 
 type Session struct {
-	User string
-	Host string
-	Port string
+	User      string
+	Host      string
+	Port      string
+	Command   string
+	Subsystem string
+	PublicKey string
 }
 
 func NewSession(s ssh.Session) *Session {
 	user := s.User()
 	host, port, _ := net.SplitHostPort(s.RemoteAddr().String())
-	return &Session{User: user, Host: host, Port: port}
+	return &Session{
+		User:      user,
+		Host:      host,
+		Port:      port,
+		Command:   s.RawCommand(),
+		Subsystem: s.Subsystem(),
+	}
 }
 
 func (s *Session) FormatArg(arg string) string {

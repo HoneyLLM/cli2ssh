@@ -16,7 +16,7 @@ func main() {
 	command := flag.String("c", "", "Set the command to run for each SSH session.")
 	var env args.ArrayArg
 	flag.Var(&env, "e", "Set environment variables for each SSH session.")
-	useOsEnv := flag.Bool("os-env", false, "Use the OS environment variables for the command.")
+	useOsEnv := flag.Bool("os-env", false, "Use the OS environment variables for the command, ignoring env passed by user.")
 	host := flag.String("h", "localhost", "Set the host for the server.")
 	port := flag.String("p", "2222", "Set the port for the server.")
 	hostKeyPath := flag.String("k", path.GetDefaultHostKeyPath(), "Set the path to the host key.")
@@ -36,6 +36,8 @@ func main() {
 			cmd := exec.CommandContext(s.Context(), "sh", "-c", fmtCmd)
 			if *useOsEnv {
 				cmd.Env = os.Environ()
+			} else {
+				cmd.Env = s.Environ()
 			}
 			cmd.Env = append(cmd.Env, fmtEnv...)
 			return cmd
