@@ -90,6 +90,7 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 						}
 					}
 
+					defer s.Exit(cmd.ProcessState.ExitCode())
 					if err := cmd.Run(); err != nil {
 						if exitErr, ok := err.(*exec.ExitError); ok {
 							log.Warn("Command exited with status", "command", cmd, "status", exitErr.ExitCode())
