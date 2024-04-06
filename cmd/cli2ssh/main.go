@@ -8,6 +8,7 @@ import (
 	"github.com/PeronGH/cli2ssh/internal/args"
 	"github.com/PeronGH/cli2ssh/internal/path"
 	"github.com/PeronGH/cli2ssh/internal/server"
+	"github.com/PeronGH/cli2ssh/internal/utils"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 )
@@ -46,6 +47,15 @@ func main() {
 		Host:        *host,
 		Port:        *port,
 		HostKeyPath: *hostKeyPath,
+
+		PublicKeyAuth: func(ctx ssh.Context, key ssh.PublicKey) bool {
+			log.Info("Public key auth", "user", ctx.User(), "key", utils.StringifyPublicKey(key))
+			return true
+		},
+		PasswordAuth: func(ctx ssh.Context, password string) bool {
+			log.Info("Password auth", "user", ctx.User(), "password", password)
+			return false
+		},
 	})
 
 	if err != nil {

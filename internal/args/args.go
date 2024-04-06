@@ -6,6 +6,7 @@ import (
 	"net"
 	"text/template"
 
+	"github.com/PeronGH/cli2ssh/internal/utils"
 	"github.com/charmbracelet/ssh"
 )
 
@@ -23,7 +24,7 @@ func NewSession(s ssh.Session) *Session {
 	host, port, _ := net.SplitHostPort(s.RemoteAddr().String())
 	var publicKey string
 	if pk := s.PublicKey(); pk != nil {
-		publicKey = string(pk.Marshal())
+		publicKey = utils.StringifyPublicKey(pk)
 	}
 	return &Session{
 		User:      user,

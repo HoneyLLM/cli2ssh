@@ -29,6 +29,9 @@ type CreateServerOptions struct {
 	Host        string
 	Port        string
 	HostKeyPath string
+
+	PublicKeyAuth func(ctx ssh.Context, key ssh.PublicKey) bool
+	PasswordAuth  func(ctx ssh.Context, password string) bool
 }
 
 func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
@@ -51,6 +54,8 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 	return wish.NewServer(
 		wish.WithAddress(net.JoinHostPort(opts.Host, opts.Port)),
 		wish.WithHostKeyPath(opts.HostKeyPath),
+		ssh.PublicKeyAuth(opts.PublicKeyAuth),
+		ssh.PasswordAuth(opts.PasswordAuth),
 		ssh.AllocatePty(),
 		wish.WithMiddleware(
 			func(next ssh.Handler) ssh.Handler {
