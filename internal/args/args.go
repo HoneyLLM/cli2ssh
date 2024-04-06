@@ -21,12 +21,17 @@ type Session struct {
 func NewSession(s ssh.Session) *Session {
 	user := s.User()
 	host, port, _ := net.SplitHostPort(s.RemoteAddr().String())
+	var publicKey string
+	if pk := s.PublicKey(); pk != nil {
+		publicKey = string(pk.Marshal())
+	}
 	return &Session{
 		User:      user,
 		Host:      host,
 		Port:      port,
 		Command:   s.RawCommand(),
 		Subsystem: s.Subsystem(),
+		PublicKey: publicKey,
 	}
 }
 

@@ -8,9 +8,9 @@ import (
 	"syscall"
 
 	"github.com/PeronGH/cli2ssh/internal/path"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/logging"
 )
 
@@ -55,11 +55,6 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 			func(next ssh.Handler) ssh.Handler {
 				return func(s ssh.Session) {
 					pty, _, hasPty := s.Pty()
-					if !hasPty {
-						wish.Fatalln(s, "client has no PTY.")
-						next(s)
-						return
-					}
 
 					cmd := opts.CommandProvider(s)
 					if cmd == nil {
@@ -68,23 +63,36 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 						return
 					}
 
-					cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", pty.Term))
-					cmd.Stdin = pty.Slave
-					cmd.Stdout = pty.Slave
-					cmd.Stderr = pty.Slave
-					cmd.SysProcAttr = &syscall.SysProcAttr{
-						Setctty: true,
-						Setsid:  true,
+					if hasPty {
+						cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", pty.Term))
+						cmd.Stdin = pty.Slave
+						cmd.Stdout = pty.Slave
+						cmd.Stderr = pty.Slave
+						cmd.SysProcAttr = &syscall.SysProcAttr{
+							Setctty: true,
+							Setsid:  true,
+						}
+					} else {
+						cmd.Env = append(cmd.Env, "TERM=dumb")
+						cmd.Stdin = s
+						cmd.Stdout = s
+						cmd.Stderr = s.Stderr()
+						// TODO: fix command hanging when no pty
 					}
 
+					log.Info("Executing command", "command", cmd, "pty", hasPty)
 					if err := cmd.Run(); err != nil {
-						wish.Fatalln(s, "Failed to run the command:", err)
+						if exitErr, ok := err.(*exec.ExitError); ok {
+							log.Warn("Command exited with status", "command", cmd, "status", exitErr.ExitCode())
+						} else {
+							log.Error("Failed to run the command", "command", cmd, "error", err)
+							wish.Fatalln(s, "Failed to run the command:", err)
+						}
 					}
 
 					next(s)
 				}
 			},
-			activeterm.Middleware(),
 			logging.Middleware(),
 		),
 	)
