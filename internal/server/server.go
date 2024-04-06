@@ -65,15 +65,6 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 
 					pty, _, hasPty := s.Pty()
 
-					logErr := func(err error) {
-						if exitErr, ok := err.(*exec.ExitError); ok {
-							log.Warn("Command exited with status", "command", cmd, "status", exitErr.ExitCode())
-						} else {
-							log.Error("Failed to run the command", "command", cmd, "error", err)
-							wish.Fatalln(s, "Failed to run the command:", err)
-						}
-					}
-
 					log.Info("Executing command", "command", cmd, "pty", hasPty)
 					if hasPty {
 						cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", pty.Term))
@@ -84,10 +75,6 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 							Setctty: true,
 							Setsid:  true,
 						}
-
-						if err := cmd.Run(); err != nil {
-							logErr(err)
-						}
 					} else {
 						cmd.Env = append(cmd.Env, "TERM=dumb")
 
@@ -95,14 +82,14 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 							log.Error("Failed to pipe stdio", "error", err)
 							return
 						}
+					}
 
-						if err := cmd.Start(); err != nil {
-							log.Error("Failed to start command", "command", cmd, "error", err)
-							return
-						}
-
-						if err := cmd.Wait(); err != nil {
-							logErr(err)
+					if err := cmd.Run(); err != nil {
+						if exitErr, ok := err.(*exec.ExitError); ok {
+							log.Warn("Command exited with status", "command", cmd, "status", exitErr.ExitCode())
+						} else {
+							log.Error("Failed to run the command", "command", cmd, "error", err)
+							wish.Fatalln(s, "Failed to run the command:", err)
 						}
 					}
 				}
