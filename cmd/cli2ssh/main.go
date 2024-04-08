@@ -49,11 +49,11 @@ func main() {
 		HostKeyPath: *hostKeyPath,
 
 		PublicKeyAuth: func(ctx ssh.Context, key ssh.PublicKey) bool {
-			log.Info("Public key auth", "user", ctx.User(), "key", utils.StringifyPublicKey(key))
+			log.Info("Public key auth", "remote", ctx.RemoteAddr(), "user", ctx.User(), "key", utils.StringifyPublicKey(key))
 			return true
 		},
 		PasswordAuth: func(ctx ssh.Context, password string) bool {
-			log.Info("Password auth", "user", ctx.User(), "password", password)
+			log.Info("Password auth", "remote", ctx.RemoteAddr(), "user", ctx.User(), "password", password)
 			return false
 		},
 	})

@@ -70,7 +70,7 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 
 					pty, _, hasPty := s.Pty()
 
-					log.Info("Executing command", "command", cmd, "pty", hasPty)
+					log.Info("Executing command", "remote", s.RemoteAddr(), "command", cmd, "pty", hasPty)
 					if hasPty {
 						cmd.Env = append(cmd.Env, fmt.Sprintf("TERM=%s", pty.Term))
 						cmd.Stdin = pty.Slave
@@ -84,7 +84,7 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 						cmd.Env = append(cmd.Env, "TERM=dumb")
 
 						if err := pipeStdio(cmd, s, s, s.Stderr()); err != nil {
-							log.Error("Failed to pipe stdio", "error", err)
+							log.Error("Failed to pipe stdio", "remote", s.RemoteAddr(), "error", err)
 							wish.Fatalln(s, "Failed to pipe stdio:", err)
 							return
 						}
@@ -93,9 +93,9 @@ func CreateServer(opts CreateServerOptions) (*ssh.Server, error) {
 					defer s.Exit(cmd.ProcessState.ExitCode())
 					if err := cmd.Run(); err != nil {
 						if exitErr, ok := err.(*exec.ExitError); ok {
-							log.Warn("Command exited with status", "command", cmd, "status", exitErr.ExitCode())
+							log.Warn("Command exited with status", "remote", s.RemoteAddr(), "command", cmd, "status", exitErr.ExitCode())
 						} else {
-							log.Error("Failed to run the command", "command", cmd, "error", err)
+							log.Error("Failed to run the command", "remote", s.RemoteAddr(), "command", cmd, "error", err)
 							wish.Fatalln(s, "Failed to run the command:", err)
 						}
 					}
