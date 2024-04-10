@@ -54,7 +54,7 @@ func main() {
 		},
 		PasswordAuth: func(ctx ssh.Context, password string) bool {
 			log.Info("Password auth", "remote", ctx.RemoteAddr(), "user", ctx.User(), "password", password)
-			return false
+			return true
 		},
 	})
 
